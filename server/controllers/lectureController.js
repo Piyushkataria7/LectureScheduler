@@ -16,22 +16,6 @@ exports.createLecture = async (req, res) => {
     }
 };
 
-exports.createLecture = async (req, res) => {
-    const { course, instructor, date } = req.body;
-    try {
-        const conflictingLecture = await Lecture.findOne({ instructor, date });
-        if (conflictingLecture) {
-            return res.status(400).json({ error: 'Instructor is already booked on this date' });
-        }
-
-        const newLecture = new Lecture({ course, instructor, date });
-        await newLecture.save();
-        res.status(201).json(newLecture);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-};
-
 exports.getLectureById = async (req, res) => {
     const { lectureId } = req.params;
     try {

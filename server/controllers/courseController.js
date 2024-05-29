@@ -27,3 +27,15 @@ exports.Courses = async (req,res)=>{
     const courses = await Course.find({});
     res.json({ courses });
 }
+
+exports.getCourseById = async (req, res) => {
+    try {
+      const course = await Course.findById(req.params.id).populate('lectures.instructor');
+      if (!course) {
+        return res.status(404).json({ error: 'Course not found' });
+      }
+      res.json({ course });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
