@@ -4,37 +4,30 @@ const { SECRET } = require('../middleware/authMiddleware');
 
 exports.registerAdmin = async (req, res) => {
     const { username, password } = req.body;
-    try {
-        let admin = await Admin.findOne({ username });
-        if (admin) {
-            return res.status(400).json({ message: 'Admin already exists' });
-        }
+    function callback(admin) {
+      if (admin) {
+        res.status(403).json({ message: 'Admin already exists' });
+      } else {
+        const obj = { username: username, password: password };
+        const newAdmin = new Admin(obj);
+        newAdmin.save();
 
-        admin = new Admin({ username, password });
-        await admin.save();
-
-        const payload = { admin: { id: admin.id } };
-        const token = jwt.sign(payload, SECRET, { expiresIn: '1h' });
-
-        res.status(201).json({ token });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+        const token = jwt.sign({ username, role: 'admin' }, SECRET, { expiresIn: '1h' });
+        res.json({ message: 'Admin created successfully', token });
+      }
+  
     }
-};
+    Admin.findOne({ username }).then(callback);
+  };
+
 
 exports.loginAdmin = async (req, res) => {
     const { username, password } = req.body;
-    try {
-        const admin = await Admin.findOne({ username });
-        if (!admin || admin.password !== password) {
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
-
-        const payload = { admin: { id: admin.id } };
-        const token = jwt.sign(payload, SECRET, { expiresIn: '1h' });
-
-        res.status(200).json({ token });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+    const admin = await Admin.findOne({ username, password });
+    if (admin) {
+      const token = jwt.sign({ username, role: 'admin' }, SECRET, { expiresIn: '1h' });
+      res.json({ message: 'Logged in successfully', token });
+    } else {
+      res.status(403).json({ message: 'Invalid username or password' });
     }
 };
